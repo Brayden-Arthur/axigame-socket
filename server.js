@@ -43,8 +43,7 @@ io.on('connect', (socket) => {
         response = JSON.parse(data.toString())
         if (response && response["correct"]) {
           console.log("correct")
-          io
-            .emit('message', {username: "admin", message: `${message.username} guessed correctly! It was ${message.message}`})
+          socket.broadcast.emit('message', {username: "admin", message: `${message.username} guessed correctly! It was ${message.message}`})
         }
       })
     })
