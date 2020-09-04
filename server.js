@@ -9,12 +9,14 @@ const port = process.env.PORT || 5000
 
 const app = express()
 const server = http.createServer(app)
-const io = socketIo(server)
+const io = socketIo(server, { wsEngine: 'ws' })
 
 app.use(cors())
 
 app.get("/noWinner/:drawingName", (req, res) => {
-  io.to("game").emit('message', {username: "admin", message: req.params.drawingName})
+  console.log(req.params.drawingName)
+  io.emit('message', {username: "admin", message: `No correct guesses! The correct answer is close to ${req.params.drawingName}`})
+  return 200
 })
 
 io.on('connect', (socket) => {
@@ -26,28 +28,28 @@ io.on('connect', (socket) => {
     socket.join("game")
 
     socket.broadcast
-        .to("game")
         .emit('message', {username: "admin", message: `${user.username} has joined!`})
 
     callback()
   })
 
-  socket.on('sendMessage', async (message, callback) => {
-    await http.get(`http://10.20.40.57:8000/guess/${message.message}`, (res) => {
+  socket.on('sendMessage', (message, callback) => {
+    http.get(`http://10.20.40.57:8000/guess/${message.message}`, (res) => {
       let data;
       res.on('data',(t) => {
         data = t
       }).on('end', () => {
+	console.log(data.toString())
         response = JSON.parse(data.toString())
         if (response && response["correct"]) {
           console.log("correct")
-          io.to("game")
+          io
             .emit('message', {username: "admin", message: `${message.username} guessed correctly! It was ${message.message}`})
         }
       })
     })
 
-    io.to("game").emit('message', {username: message.username, message: message.message})
+    io.emit('message', {username: message.username, message: message.message})
     callback(message)
   })
 
