@@ -14,7 +14,7 @@ const io = socketIo(server)
 app.use(cors())
 
 app.get("/noWinner/:drawingName", (req, res) => {
-  io.to("game").emit('message', {username: req.params.drawingName, message: message.message})
+  io.to("game").emit('message', {username: "admin", message: req.params.drawingName})
 })
 
 io.on('connect', (socket) => {
